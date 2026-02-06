@@ -114,7 +114,12 @@ Retrieves details about a specific crawl:
 - Domain info
 - Domain info
 
-## Usage with Claude Desktop
+## Supported AI Clients
+
+AUDISTO-MCP works with any MCP-compatible AI client. Here's how to set it up for each major platform:
+
+### Claude Desktop
+The easiest way to use Claude with MCP servers on your desktop.
 
 1. Find your `claude_desktop_config.json`:
    - **Windows:** `%APPDATA%\Claude\claude_desktop_config.json`
@@ -158,9 +163,65 @@ Retrieves details about a specific crawl:
 3. Restart Claude Desktop
 4. Ask Claude questions like: "What crawls do I have?" or "Show me crawl 12345"
 
-## Usage with Gemini CLI
+### Claude CLI
+Use Claude directly from your terminal.
 
-### Setup (all platforms)
+#### Prerequisites
+- Claude CLI installed: https://github.com/anthropics/claude-cli
+
+#### Setup
+
+**Windows (PowerShell):**
+```powershell
+# Set the path to your server
+$serverPath = "C:\Users\YourUsername\Documents\GitHub\AUDISTO-MCP\server.py"
+
+# Add MCP server
+claude mcp add audisto "python $serverPath"
+
+# Verify
+claude mcp list
+```
+
+**macOS / Linux (Bash/Zsh):**
+```bash
+# Set the path to your server
+SERVER_PATH="$HOME/path/to/AUDISTO-MCP/server.py"
+
+# Add MCP server
+claude mcp add audisto "python3 $SERVER_PATH"
+
+# Verify
+claude mcp list
+```
+
+#### Set credentials
+
+**Windows (PowerShell):**
+```powershell
+[Environment]::SetEnvironmentVariable("AUDISTO_API_KEY", "your_api_key_here", "User")
+[Environment]::SetEnvironmentVariable("AUDISTO_PASSWORD", "your_password_here", "User")
+```
+
+**macOS / Linux (Bash/Zsh):**
+```bash
+export AUDISTO_API_KEY="your_api_key_here"
+export AUDISTO_PASSWORD="your_password_here"
+```
+
+#### Usage
+```bash
+claude "What crawls do I have?"
+claude "Show me crawl 12345"
+```
+
+### Gemini CLI
+Use Gemini directly from your terminal.
+
+#### Prerequisites
+- Gemini CLI installed: `npm install -g @google/generative-ai-cli` or follow official docs
+
+#### Setup (all platforms)
 
 First, make sure your virtual environment is activated and Python can find the server:
 
