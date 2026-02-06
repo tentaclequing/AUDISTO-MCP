@@ -122,7 +122,6 @@ Retrieves details about a specific crawl:
 - Max depth reached
 - Start time
 - Domain info
-- Domain info
 
 ## Supported AI Clients
 

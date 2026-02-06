@@ -180,3 +180,10 @@ build/
 # Local copilot instructions (AI agent notes, not for publication)
 .github/copilot-instructions.md
 
+# Windows device files (sometimes accidentally created)
+nul
+NUL
+
+# Claude CLI local configuration
+.claude/
+
