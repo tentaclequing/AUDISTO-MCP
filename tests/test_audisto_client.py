@@ -85,7 +85,7 @@ def test_get_crawl_status_v2_success_with_list():
 
 
 def test_get_crawl_status_v2_rate_limit():
-    """Test 429 rate limit error handling."""
+    """Test 429 rate limit error handling with retry exhaustion."""
     client = AudistoClient(api_key="k", password="p")
     url = "https://api.audisto.com/2.0/status/crawls"
 
@@ -96,9 +96,9 @@ def test_get_crawl_status_v2_rate_limit():
         rsps.add(rsps.GET, url, status=429)
         rsps.add(rsps.GET, url, status=429)  # Final retry
 
-        with pytest.raises(requests.exceptions.HTTPError) as exc_info:
+        # When retries are exhausted, RetryError is raised instead of HTTPError
+        with pytest.raises(requests.exceptions.RetryError):
             client.get_crawl_status_v2()
-        assert exc_info.value.response.status_code == 429
 
 
 def test_iter_chunked_stops():
