@@ -1,16 +1,30 @@
-from pydantic import BaseModel
-from typing import Optional
+from pydantic import BaseModel, Field
+from typing import Optional, List
+
+
+class CrawlStatus(BaseModel):
+    """Individual crawl status item from the crawl list endpoint."""
+    id: Optional[int] = None
+    domain: Optional[str] = None
+    status: Optional[str] = None
+
+
+class CrawlStatusResponse(BaseModel):
+    """Response from the crawl status endpoint."""
+    items: List[CrawlStatus] = Field(default_factory=list)
 
 
 class CrawlSummary(BaseModel):
-    id: Optional[int]
-    domain: Optional[str]
-    crawled_pages: Optional[int]
-    max_depth: Optional[int]
-    start_time: Optional[str]
+    """Detailed summary of a specific crawl."""
+    id: Optional[int] = None
+    domain: Optional[str] = None
+    crawled_pages: Optional[int] = None
+    max_depth: Optional[int] = None
+    start_time: Optional[str] = None
 
 
 class ChunkMeta(BaseModel):
-    total: Optional[int]
-    page: Optional[int]
-    size: Optional[int]
+    """Pagination metadata for chunked responses."""
+    total: Optional[int] = None
+    page: Optional[int] = None
+    size: Optional[int] = None

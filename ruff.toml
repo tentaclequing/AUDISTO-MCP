@@ -1,0 +1,47 @@
+# Ruff configuration for AUDISTO-MCP
+# https://docs.astral.sh/ruff/
+
+# Python version target
+target-version = "py38"
+
+# Maximum line length
+line-length = 100
+
+# Enable specific rule sets
+[lint]
+select = [
+    "E",    # pycodestyle errors
+    "W",    # pycodestyle warnings
+    "F",    # pyflakes
+    "I",    # isort
+    "N",    # pep8-naming
+    "UP",   # pyupgrade
+    "B",    # flake8-bugbear
+    "C4",   # flake8-comprehensions
+    "S",    # flake8-bandit (security)
+    "T20",  # flake8-print
+]
+
+# Ignore specific rules
+ignore = [
+    "E501",   # Line too long (handled by formatter)
+    "S101",   # Use of assert (OK in tests)
+    "T201",   # Print statements (OK for CLI output)
+]
+
+# Exclude directories
+exclude = [
+    ".git",
+    ".venv",
+    "venv",
+    "__pycache__",
+    "build",
+    "dist",
+    ".pytest_cache",
+]
+
+[lint.per-file-ignores]
+# Allow print statements in tests
+"tests/*" = ["T20"]
+# Allow assert statements in tests
+"tests/*" = ["S101"]

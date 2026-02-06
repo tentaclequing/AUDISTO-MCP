@@ -11,8 +11,14 @@ import requests
 import os
 import sys
 import logging
-from typing import Tuple
+from typing import Tuple, List, Any, Union
 from audisto_client import AudistoClient
+from models import CrawlStatusResponse, CrawlSummary
+
+# Check Python version
+if sys.version_info < (3, 8):
+    print("ERROR: Python 3.8 or later is required")
+    sys.exit(1)
 
 # Configure logging
 logging.basicConfig(
@@ -24,7 +30,41 @@ logger = logging.getLogger(__name__)
 # Initialize the MCP Server
 mcp = FastMCP("Audisto SEO Agent")
 
+# Constants
+MAX_CRAWLS_DISPLAYED = 5
+
 # --- Helper Functions ---
+
+def handle_api_error(e: Exception, context: str = "") -> str:
+    """Centralized error message formatter for consistent error handling.
+
+    Args:
+        e: The exception that was raised
+        context: Context string describing where the error occurred
+
+    Returns:
+        User-friendly error message string
+    """
+    if isinstance(e, requests.exceptions.Timeout):
+        logger.error(f"{context} - Timeout: {str(e)}")
+        return "Error: Request timeout. Audisto API is not responding."
+    elif isinstance(e, requests.exceptions.HTTPError):
+        status = getattr(e.response, 'status_code', None)
+        logger.error(f"{context} - HTTP {status}: {str(e)}")
+        if status == 404:
+            return "Error: Resource not found."
+        elif status == 429:
+            return "Error: Rate limit exceeded. Please wait and try again."
+        return f"Error: Audisto API returned status {status}"
+    elif isinstance(e, requests.exceptions.RequestException):
+        logger.error(f"{context} - Request error: {str(e)}")
+        return "Error: Failed to connect to Audisto API"
+    elif isinstance(e, ValueError):
+        logger.error(f"{context} - Validation error: {str(e)}")
+        return "Error: Missing or invalid credentials"
+    else:
+        logger.exception(f"{context} - Unexpected error: {str(e)}")
+        return "Error: An unexpected error occurred"
 def get_auth() -> Tuple[str, str]:
     """Retrieves credentials safely from environment variables.
     
@@ -89,42 +129,52 @@ Tips:
 @mcp.tool()
 def get_crawl_status() -> str:
     """
-    Check the status of recent Audisto crawls. 
+    Check the status of recent Audisto crawls.
     Returns the ID, status, and domain of the last 5 crawls.
     """
     try:
         client = get_client()
-        data = client.get_crawl_status_v2()
+        response = client.get_crawl_status_v2()
 
-        # Format the output for the AI to read easily
-        if not data:
+        # Handle both Pydantic model and raw dict responses
+        crawls: List[Any] = []
+        if isinstance(response, CrawlStatusResponse):
+            # CrawlStatusResponse Pydantic model
+            crawls = response.items[:MAX_CRAWLS_DISPLAYED]
+        elif isinstance(response, dict):
+            # Raw dict with 'items' key
+            items = response.get('items', [])
+            crawls = items[:MAX_CRAWLS_DISPLAYED] if isinstance(items, list) else []
+        elif isinstance(response, list):
+            # Direct list of crawls
+            crawls = response[:MAX_CRAWLS_DISPLAYED]
+
+        if not crawls:
             logger.info("No recent crawls found in Audisto")
             return "No recent crawls found."
 
-        summary = ["Here are the latest 5 Audisto crawls:"]
-        for crawl in (data[:5] if isinstance(data, list) else data.get('items', [])[:5]):
-            status_icon = "OK" if crawl.get('status') == 'finished' else "IN_PROGRESS"
-            summary.append(f"[{status_icon}] ID: {crawl.get('id')} | Domain: {crawl.get('domain')} | Status: {crawl.get('status')}")
+        summary = [f"Here are the latest {MAX_CRAWLS_DISPLAYED} Audisto crawls:"]
+        for crawl in crawls:
+            # Handle both Pydantic models and dicts
+            if hasattr(crawl, 'id'):
+                # Pydantic model
+                crawl_id = crawl.id
+                domain = crawl.domain
+                status = crawl.status
+            else:
+                # Dict
+                crawl_id = crawl.get('id') if isinstance(crawl, dict) else None
+                domain = crawl.get('domain') if isinstance(crawl, dict) else None
+                status = crawl.get('status') if isinstance(crawl, dict) else None
+
+            status_icon = "✓" if status == 'finished' else "⋯"
+            summary.append(f"[{status_icon}] ID: {crawl_id} | Domain: {domain} | Status: {status}")
 
         logger.info("Successfully retrieved crawls from Audisto API")
         return "\n".join(summary)
 
-    except requests.exceptions.Timeout as e:
-        logger.error(f"Timeout connecting to Audisto API: {str(e)}")
-        return "Error: Request timeout. Audisto API is not responding."
-    except requests.exceptions.HTTPError as e:
-        status = getattr(e.response, 'status_code', None)
-        logger.error(f"HTTP error from Audisto API: {status} - {str(e)}")
-        return f"Error: Audisto API returned status {status}"
-    except requests.exceptions.RequestException as e:
-        logger.error(f"Network error connecting to Audisto API: {str(e)}")
-        return f"Error: Failed to connect to Audisto API"
-    except ValueError as e:
-        logger.error(f"Authentication error: {str(e)}")
-        return "Error: Missing or invalid credentials"
     except Exception as e:
-        logger.exception(f"Unexpected error in get_crawl_status: {str(e)}")
-        return "Error: An unexpected error occurred"
+        return handle_api_error(e, "get_crawl_status")
 
 
 @mcp.tool()
@@ -139,37 +189,36 @@ def get_crawl_summary(crawl_id: int) -> str:
         client = get_client()
         data = client.get_crawl_summary_v2(crawl_id)
 
-        if not isinstance(data, dict):
-            logger.error(f"Expected dict response for crawl {crawl_id}, got {type(data)}")
+        # Handle both Pydantic model and dict
+        if isinstance(data, CrawlSummary):
+            # Pydantic model
+            summary = (f"Crawl Summary for ID {crawl_id}:\n"
+                       f"- Domain: {data.domain or 'N/A'}\n"
+                       f"- Pages Crawled: {data.crawled_pages or 'N/A'}\n"
+                       f"- Max Depth Reached: {data.max_depth or 'N/A'}\n"
+                       f"- Start Time: {data.start_time or 'N/A'}")
+        elif isinstance(data, dict):
+            # Raw dict (fallback)
+            summary = (f"Crawl Summary for ID {crawl_id}:\n"
+                       f"- Domain: {data.get('domain', 'N/A')}\n"
+                       f"- Pages Crawled: {data.get('crawled_pages', 'N/A')}\n"
+                       f"- Max Depth Reached: {data.get('max_depth', 'N/A')}\n"
+                       f"- Start Time: {data.get('start_time', 'N/A')}")
+        else:
+            logger.error(f"Unexpected response type for crawl {crawl_id}: {type(data)}")
             return "Error: Invalid crawl data format"
 
-        summary = (f"Crawl Summary for ID {crawl_id}:\n"
-                   f"- Domain: {data.get('domain', 'N/A')}\n"
-                   f"- Pages Crawled: {data.get('crawled_pages', 'N/A')}\n"
-                   f"- Max Depth Reached: {data.get('max_depth', 'N/A')}\n"
-                   f"- Start Time: {data.get('start_time', 'N/A')}")
         logger.info(f"Successfully retrieved summary for crawl {crawl_id}")
         return summary
 
-    except requests.exceptions.HTTPError as e:
-        status = getattr(e.response, 'status_code', None)
-        if status == 404:
-            logger.warning(f"Crawl ID {crawl_id} not found")
-            return f"Error: Crawl ID {crawl_id} not found."
-        logger.error(f"HTTP error from Audisto API for crawl {crawl_id}: {status}")
-        return f"Error: Audisto API returned status {status}"
-    except requests.exceptions.Timeout as e:
-        logger.error(f"Timeout retrieving crawl {crawl_id}: {str(e)}")
-        return "Error: Request timeout. Audisto API is not responding."
-    except requests.exceptions.RequestException as e:
-        logger.error(f"Network error retrieving crawl {crawl_id}: {str(e)}")
-        return f"Error: Failed to connect to Audisto API"
-    except ValueError as e:
-        logger.error(f"Authentication error: {str(e)}")
-        return "Error: Missing or invalid credentials"
     except Exception as e:
-        logger.exception(f"Unexpected error in get_crawl_summary for crawl {crawl_id}: {str(e)}")
-        return "Error: An unexpected error occurred"
+        # Special handling for 404 errors
+        if isinstance(e, requests.exceptions.HTTPError):
+            status = getattr(e.response, 'status_code', None)
+            if status == 404:
+                logger.warning(f"Crawl ID {crawl_id} not found")
+                return f"Error: Crawl ID {crawl_id} not found."
+        return handle_api_error(e, f"get_crawl_summary(crawl_id={crawl_id})")
 
 
 def validate_startup_credentials() -> bool:

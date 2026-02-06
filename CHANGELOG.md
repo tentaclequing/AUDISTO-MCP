@@ -2,6 +2,76 @@
 
 All notable changes to AUDISTO-MCP are documented in this file.
 
+## [1.2.0] - 2026-02-06
+
+### 🔒 Security
+
+- **CRITICAL: Updated `requests` dependency** from `2.31.0` to `>=2.32.0,<3.0.0` to fix CVE-2024-35195 (Proxy-Authorization header leakage)
+- **Added explicit `urllib3` dependency** (`>=2.0.0,<3.0.0`) with suppressed debug logging to prevent auth header exposure
+- **Python version enforcement**: Added runtime check for Python 3.8+ at server startup
+
+### ✨ Added
+
+- **Pydantic Model Validation**: Full implementation of Pydantic models (`CrawlStatus`, `CrawlStatusResponse`, `CrawlSummary`) for type-safe API response validation
+- **Comprehensive Logging**: Added structured logging throughout `audisto_client.py` with debug, info, and warning levels
+- **Centralized Error Handling**: New `handle_api_error()` helper function in `server.py` for consistent error messages
+- **Code Quality Tools**:
+  - `mypy` for static type checking with `mypy.ini` configuration
+  - `ruff` for fast Python linting with `ruff.toml` configuration
+  - Type stubs for external libraries (`types-requests`)
+- **Documentation Files**:
+  - `.env.example` template with correct Audisto API URLs
+  - `CONTRIBUTING.md` with full contributor guide and development workflow
+  - `mypy.ini` for type checking configuration
+  - `ruff.toml` for linting rules
+- **Comprehensive Test Coverage**: Added error path tests for:
+  - 404 Not Found errors
+  - 429 Rate limit errors
+  - Invalid crawl IDs (negative, non-integer)
+  - Invalid chunk sizes (0, >10,000)
+  - Unexpected response formats
+- **Configurable API Version**: API version now configurable via `AUDISTO_API_VERSION` environment variable (defaults to "2.0")
+
+### 🔧 Changed
+
+- **Updated all dependencies** with proper version constraints (`<3.0.0` style) to prevent breaking changes
+- **Enhanced CI/CD Pipeline**: Added `ruff check` and `mypy` type checking to GitHub Actions workflow
+- **Improved Error Messages**: Added specific handling for 429 rate limit errors
+- **Better Status Icons**: Changed status icons in `get_crawl_status()` from text to Unicode symbols (✓ and ⋯)
+- **Type Safety**: Added `Union` types and proper type hints throughout codebase
+- **Magic Numbers Extraction**: Extracted `MAX_CRAWLS_DISPLAYED = 5` constant in `server.py`
+
+### 📝 Documentation
+
+- **Updated README.md**:
+  - Fixed GitHub clone URL (tentaclequing/AUDISTO-MCP)
+  - Added reference to `.env.example` in setup instructions
+  - Properly formatted API credential URLs as markdown links
+- **Enhanced ARCHITECTURE.md**: Documentation now reflects Pydantic model usage and logging additions
+
+### 🐛 Fixed
+
+- **Type checker compatibility**: Fixed type errors in `get_crawl_status()` for Pydantic model handling
+- **Proper Pydantic model usage**: `audisto_client.py` now returns validated models instead of raw dicts
+- **Fallback handling**: Graceful degradation to raw dicts if Pydantic validation fails
+
+### 🧪 Testing
+
+- **Expanded test suite** from 2 to 12 tests covering both success and error paths
+- **Test organization**: Descriptive test names with docstrings explaining each test case
+- **Better mocking**: Enhanced `responses` mock usage for realistic API simulation
+
+### 🔄 Development
+
+- **Version pinning**: All dependencies now have upper bounds to prevent unexpected breakage
+- **Updated dev dependencies**:
+  - `pytest>=8.0.0,<9.0.0` (was `7.4.0`)
+  - `responses>=0.25.0,<1.0.0` (was `0.25.8`)
+  - `pip-audit>=2.7.0,<3.0.0` (was `2.6.0`)
+  - Added `mypy>=1.0.0,<2.0.0`
+  - Added `ruff>=0.1.0,<1.0.0`
+  - Added `python-dotenv>=1.0.0,<2.0.0`
+
 ## [1.1.1] - 2026-02-06
 
 ### Fixed

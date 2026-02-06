@@ -23,7 +23,7 @@ Audisto's API enforces strict usage limits:
 
 #### 1. Clone this repository
 ```bash
-git clone https://github.com/yourusername/AUDISTO-MCP.git
+git clone https://github.com/tentaclequing/AUDISTO-MCP.git
 cd AUDISTO-MCP
 ```
 
@@ -48,11 +48,21 @@ pip install -r requirements.txt
 
 #### 4. Set up credentials
 
-Create a `.env` file in the project root:
+Copy the example environment file and add your credentials:
+```bash
+cp .env.example .env
+```
+
+Then edit `.env` with your Audisto API credentials:
 ```
 AUDISTO_API_KEY=your_api_key_here
 AUDISTO_PASSWORD=your_password_here
 ```
+
+**Get your API credentials from:**
+
+- Web: <https://audisto.com/accounts/api>
+- Documentation: <https://audisto.com/help/api/>
 
 **Windows (PowerShell):** Load environment variables
 ```powershell

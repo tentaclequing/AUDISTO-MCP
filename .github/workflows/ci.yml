@@ -11,15 +11,26 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.10'
+
       - name: Install runtime deps
         run: pip install -r requirements.txt
+
       - name: Install dev deps
         run: pip install -r requirements-dev.txt
-      - name: Run pip-audit
+
+      - name: Run code linting (ruff)
+        run: ruff check .
+
+      - name: Run type checking (mypy)
+        run: mypy server.py audisto_client.py models.py --strict --allow-untyped-calls
+
+      - name: Run security audit (pip-audit)
         run: pip-audit --progress=off
-      - name: Run tests
-        run: pytest -q
+
+      - name: Run tests (pytest)
+        run: pytest -v
