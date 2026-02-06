@@ -15,7 +15,7 @@ import requests
 from fastmcp import FastMCP
 
 from audisto_client import AudistoClient
-from models import CrawlStatusResponse, CrawlSummary
+from models import CrawlStatusResponse
 
 # Check Python version
 
