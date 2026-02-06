@@ -178,18 +178,7 @@ AUDISTO-MCP is a **read-only Model Context Protocol (MCP) server** that bridges 
 
 ---
 
-## Future Roadmap
 
-### v1.2 (Potential)
-- [ ] Add `get_pages(crawl_id)` to retrieve paginated page data
-- [ ] Add `get_links(crawl_id)` for link graph analysis
-- [ ] Cache recent crawl lists (reduce API calls)
-- [ ] Support for additional Audisto endpoints (hints, checks, requirements)
-
-### v2.0 (Long-term)
-- [ ] Cached page content retrieval (`/cached/rendering/html/parsed`)
-- [ ] History/trend analysis (`/2.0/histories`)
-- [ ] Monitoring checks and alerts (`/2.0/crawls/{id}/checks`)
 
 ### Not Planned (By Design)
 - [ ] Start/stop crawl endpoints (read-only philosophy)

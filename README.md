@@ -21,28 +21,77 @@ Audisto's API enforces strict usage limits:
 
 ### Installation
 
-1. **Clone this repository** (or download the files)
-   ```bash
-   git clone https://github.com/yourusername/AUDISTO-MCP.git
-   cd AUDISTO-MCP
-   ```
+#### 1. Clone this repository
+```bash
+git clone https://github.com/yourusername/AUDISTO-MCP.git
+cd AUDISTO-MCP
+```
 
-2. **Install dependencies**
-   ```bash
-   pip install -r requirements.txt
-   ```
+#### 2. Create a virtual environment
 
-3. **Set up credentials**
-   Create a `.env` file or set environment variables:
-   ```bash
-   export AUDISTO_API_KEY=your_api_key_here
-   export AUDISTO_PASSWORD=your_password_here
-   ```
+**Windows (PowerShell):**
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+```
 
-4. **Run the server**
-   ```bash
-   python server.py
-   ```
+**Linux / macOS (Bash/Zsh):**
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+```
+
+#### 3. Install dependencies
+```bash
+pip install -r requirements.txt
+```
+
+#### 4. Set up credentials
+
+Create a `.env` file in the project root:
+```
+AUDISTO_API_KEY=your_api_key_here
+AUDISTO_PASSWORD=your_password_here
+```
+
+**Windows (PowerShell):** Load environment variables
+```powershell
+Get-Content .env | ForEach-Object {
+    if ($_ -match '^([^=]+)=(.*)$') {
+        [Environment]::SetEnvironmentVariable($matches[1], $matches[2])
+    }
+}
+```
+
+**Linux / macOS (Bash/Zsh):** Load environment variables
+```bash
+export $(cat .env | xargs)
+```
+
+Or simply export them manually:
+```bash
+export AUDISTO_API_KEY=your_api_key_here
+export AUDISTO_PASSWORD=your_password_here
+```
+
+#### 5. Run the server
+
+**Windows (PowerShell):**
+```powershell
+python server.py
+```
+
+**Linux / macOS (Bash/Zsh):**
+```bash
+python3 server.py
+```
+
+You should see:
+```
+INFO - Validating startup credentials...
+INFO - Credentials validated successfully
+INFO - MCP Server initialized
+```
 
 ## Available Tools
 
@@ -67,46 +116,107 @@ Retrieves details about a specific crawl:
 
 ## Usage with Claude Desktop
 
-Configure Claude Desktop to use this MCP server by adding it to your `claude_desktop_config.json`:
+1. Find your `claude_desktop_config.json`:
+   - **Windows:** `%APPDATA%\Claude\claude_desktop_config.json`
+   - **macOS:** `~/Library/Application Support/Claude/claude_desktop_config.json`
+   - **Linux:** `~/.config/Claude/claude_desktop_config.json`
 
-```json
-{
-  "mcpServers": {
-    "audisto": {
-      "command": "python",
-      "args": ["/path/to/AUDISTO-MCP/server.py"]
-    }
-  }
-}
-```
+2. Add this MCP server to the `mcpServers` section:
 
-Then you can ask Claude questions like:
-- "What crawls do I have in Audisto?"
-- "Show me the summary for crawl 12345"
-- "How many pages were crawled in my latest crawl?"
+   **Windows (use backslashes or forward slashes):**
+   ```json
+   {
+     "mcpServers": {
+       "audisto": {
+         "command": "python",
+         "args": ["C:\\Users\\YourUsername\\Documents\\GitHub\\AUDISTO-MCP\\server.py"],
+         "env": {
+           "AUDISTO_API_KEY": "your_api_key_here",
+           "AUDISTO_PASSWORD": "your_password_here"
+         }
+       }
+     }
+   }
+   ```
+
+   **macOS / Linux:**
+   ```json
+   {
+     "mcpServers": {
+       "audisto": {
+         "command": "python3",
+         "args": ["/Users/YourUsername/path/to/AUDISTO-MCP/server.py"],
+         "env": {
+           "AUDISTO_API_KEY": "your_api_key_here",
+           "AUDISTO_PASSWORD": "your_password_here"
+         }
+       }
+     }
+   }
+   ```
+
+3. Restart Claude Desktop
+4. Ask Claude questions like: "What crawls do I have?" or "Show me crawl 12345"
 
 ## Usage with Gemini CLI
 
-Add the MCP server to Gemini CLI:
+### Setup (all platforms)
 
-```bash
-gemini mcp add audisto "python C:\path\to\AUDISTO-MCP\server.py"
-```
+First, make sure your virtual environment is activated and Python can find the server:
 
-Enable the server:
+**Windows (PowerShell):**
+```powershell
+# Store full path to server.py
+$serverPath = "C:\Users\YourUsername\Documents\GitHub\AUDISTO-MCP\server.py"
 
-```bash
+# Add MCP server
+gemini mcp add audisto "python $serverPath" --scope user
+
+# Enable it
 gemini mcp enable audisto
-```
 
-View all configured servers:
-
-```bash
+# Verify
 gemini mcp list
 ```
 
-To remove the server:
+**macOS / Linux (Bash/Zsh):**
+```bash
+# Store full path to server.py
+SERVER_PATH="$HOME/path/to/AUDISTO-MCP/server.py"
 
+# Add MCP server
+gemini mcp add audisto "python3 $SERVER_PATH" --scope user
+
+# Enable it
+gemini mcp enable audisto
+
+# Verify
+gemini mcp list
+```
+
+### Set credentials
+
+After adding the server, set environment variables:
+
+**Windows (PowerShell):**
+```powershell
+[Environment]::SetEnvironmentVariable("AUDISTO_API_KEY", "your_api_key_here", "User")
+[Environment]::SetEnvironmentVariable("AUDISTO_PASSWORD", "your_password_here", "User")
+```
+
+**macOS / Linux (Bash/Zsh):**
+```bash
+# Add to ~/.bashrc, ~/.zshrc, or ~/.profile
+export AUDISTO_API_KEY="your_api_key_here"
+export AUDISTO_PASSWORD="your_password_here"
+
+# Then reload
+source ~/.bashrc  # or ~/.zshrc
+```
+
+### Remove the server (if needed)
+
+**All platforms:**
 ```bash
 gemini mcp remove audisto
 ```
