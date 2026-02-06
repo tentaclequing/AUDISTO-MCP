@@ -6,19 +6,18 @@ Description: A Model Context Protocol server for connecting AI agents to Audisto
 Read-only: This MCP acts only as a read-only adapter to Audisto's API. It does not provide any tools to start, stop, or modify crawls.
 """
 
-from fastmcp import FastMCP
-import requests
+import logging
 import os
 import sys
-import logging
-from typing import Tuple, List, Any, Union
+from typing import Any, List, Tuple
+
+import requests
+from fastmcp import FastMCP
+
 from audisto_client import AudistoClient
 from models import CrawlStatusResponse, CrawlSummary
 
 # Check Python version
-if sys.version_info < (3, 8):
-    print("ERROR: Python 3.8 or later is required")
-    sys.exit(1)
 
 # Configure logging
 logging.basicConfig(
@@ -67,20 +66,20 @@ def handle_api_error(e: Exception, context: str = "") -> str:
         return "Error: An unexpected error occurred"
 def get_auth() -> Tuple[str, str]:
     """Retrieves credentials safely from environment variables.
-    
+
     Returns:
         Tuple[str, str]: (api_key, password) for Basic Auth
-        
+
     Raises:
         ValueError: If AUDISTO_API_KEY or AUDISTO_PASSWORD are not set
     """
     api_key = os.getenv("AUDISTO_API_KEY")
     password = os.getenv("AUDISTO_PASSWORD")  # Audisto uses this as the 'password' in Basic Auth
-    
+
     if not api_key or not password:
         logger.error("Missing required environment variables: AUDISTO_API_KEY and/or AUDISTO_PASSWORD")
         raise ValueError("Missing Credentials! Please set AUDISTO_API_KEY and AUDISTO_PASSWORD in your environment.")
-    
+
     return (api_key, password)
 
 
@@ -141,13 +140,10 @@ def get_crawl_status() -> str:
         if isinstance(response, CrawlStatusResponse):
             # CrawlStatusResponse Pydantic model
             crawls = response.items[:MAX_CRAWLS_DISPLAYED]
-        elif isinstance(response, dict):
+        else:
             # Raw dict with 'items' key
             items = response.get('items', [])
             crawls = items[:MAX_CRAWLS_DISPLAYED] if isinstance(items, list) else []
-        elif isinstance(response, list):
-            # Direct list of crawls
-            crawls = response[:MAX_CRAWLS_DISPLAYED]
 
         if not crawls:
             logger.info("No recent crawls found in Audisto")
@@ -189,24 +185,12 @@ def get_crawl_summary(crawl_id: int) -> str:
         client = get_client()
         data = client.get_crawl_summary_v2(crawl_id)
 
-        # Handle both Pydantic model and dict
-        if isinstance(data, CrawlSummary):
-            # Pydantic model
-            summary = (f"Crawl Summary for ID {crawl_id}:\n"
-                       f"- Domain: {data.domain or 'N/A'}\n"
-                       f"- Pages Crawled: {data.crawled_pages or 'N/A'}\n"
-                       f"- Max Depth Reached: {data.max_depth or 'N/A'}\n"
-                       f"- Start Time: {data.start_time or 'N/A'}")
-        elif isinstance(data, dict):
-            # Raw dict (fallback)
-            summary = (f"Crawl Summary for ID {crawl_id}:\n"
-                       f"- Domain: {data.get('domain', 'N/A')}\n"
-                       f"- Pages Crawled: {data.get('crawled_pages', 'N/A')}\n"
-                       f"- Max Depth Reached: {data.get('max_depth', 'N/A')}\n"
-                       f"- Start Time: {data.get('start_time', 'N/A')}")
-        else:
-            logger.error(f"Unexpected response type for crawl {crawl_id}: {type(data)}")
-            return "Error: Invalid crawl data format"
+        # Data is always a CrawlSummary Pydantic model
+        summary = (f"Crawl Summary for ID {crawl_id}:\n"
+                   f"- Domain: {data.domain or 'N/A'}\n"
+                   f"- Pages Crawled: {data.crawled_pages or 'N/A'}\n"
+                   f"- Max Depth Reached: {data.max_depth or 'N/A'}\n"
+                   f"- Start Time: {data.start_time or 'N/A'}")
 
         logger.info(f"Successfully retrieved summary for crawl {crawl_id}")
         return summary
@@ -223,7 +207,7 @@ def get_crawl_summary(crawl_id: int) -> str:
 
 def validate_startup_credentials() -> bool:
     """Validate credentials are available at startup.
-    
+
     Returns:
         bool: True if credentials are valid, False otherwise
     """

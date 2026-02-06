@@ -16,13 +16,13 @@ from __future__ import annotations
 import logging
 import os
 import threading
-from typing import Any, Dict, Iterator, Optional, Union
+from typing import Any, Iterator
 
 import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
-from models import CrawlSummary, CrawlStatusResponse
+from models import CrawlStatusResponse, CrawlSummary
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -37,8 +37,8 @@ DEFAULT_VERSION = os.getenv("AUDISTO_API_VERSION", "2.0")
 class AudistoClient:
     def __init__(
         self,
-        api_key: Optional[str] = None,
-        password: Optional[str] = None,
+        api_key: str | None = None,
+        password: str | None = None,
         base_url: str = DEFAULT_BASE,
         api_version: str = DEFAULT_VERSION,
         timeout: int = 120,
@@ -47,7 +47,17 @@ class AudistoClient:
         self.base_url = base_url.rstrip("/")
         self.api_version = api_version
         self.timeout = timeout
-        self.auth = (api_key or os.getenv("AUDISTO_API_KEY"), password or os.getenv("AUDISTO_PASSWORD"))
+
+        # Get credentials from parameters or environment
+        final_api_key = api_key or os.getenv("AUDISTO_API_KEY")
+        final_password = password or os.getenv("AUDISTO_PASSWORD")
+
+        # Store as tuple for requests auth (None if missing)
+        self.auth: tuple[str, str] | None = (
+            (final_api_key, final_password)
+            if final_api_key and final_password
+            else None
+        )
         self._lock = threading.Lock()
 
         # Session with retries/backoff
@@ -65,7 +75,7 @@ class AudistoClient:
     def _url(self, path: str) -> str:
         return f"{self.base_url}/{self.api_version}{path}"
 
-    def get_crawl_status_v2(self) -> Union[CrawlStatusResponse, Dict[str, Any]]:
+    def get_crawl_status_v2(self) -> CrawlStatusResponse | dict[str, Any]:
         """Retrieve list of recent crawls (v2).
 
         Returns a validated CrawlStatusResponse model or raw dict if validation fails.
@@ -77,8 +87,8 @@ class AudistoClient:
             resp = self.session.get(url, auth=self.auth, timeout=self.timeout)
         resp.raise_for_status()
 
-        data = resp.json()
-        logger.info(f"Successfully fetched crawl status")
+        data: Any = resp.json()
+        logger.info("Successfully fetched crawl status")
 
         # Try to validate with Pydantic, fall back to raw dict if format differs
         try:
@@ -87,10 +97,12 @@ class AudistoClient:
             elif isinstance(data, list):
                 # If API returns a list directly, wrap it
                 return CrawlStatusResponse(items=data)
-            return data
+            # Return as dict if not handled above
+            return dict(data) if not isinstance(data, dict) else data
         except Exception as e:
             logger.warning(f"Failed to validate crawl status response: {e}. Returning raw data.")
-            return data
+            # Ensure we return a dict type
+            return dict(data) if not isinstance(data, dict) else data
 
     def get_crawl_summary_v2(self, crawl_id: int) -> CrawlSummary:
         """Retrieve crawl details for a given crawl id (v2).
@@ -116,7 +128,7 @@ class AudistoClient:
 
         return CrawlSummary(**data)
 
-    def iter_chunked(self, path: str, chunksize: int = 100, **params) -> Iterator[Dict[str, Any]]:
+    def iter_chunked(self, path: str, chunksize: int = 100, **params: Any) -> Iterator[dict[str, Any]]:
         """Iterate over chunked endpoints.
 
         Args:

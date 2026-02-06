@@ -1,10 +1,9 @@
-import json
 import pytest
-from audisto_client import AudistoClient
-from models import CrawlSummary, CrawlStatusResponse
-
 import requests
 import responses
+
+from audisto_client import AudistoClient
+from models import CrawlStatusResponse, CrawlSummary
 
 
 def test_get_crawl_summary_v2_success():

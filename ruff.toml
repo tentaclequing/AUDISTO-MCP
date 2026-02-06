@@ -41,7 +41,5 @@ exclude = [
 ]
 
 [lint.per-file-ignores]
-# Allow print statements in tests
-"tests/*" = ["T20"]
-# Allow assert statements in tests
-"tests/*" = ["S101"]
+# Allow print statements, assert statements, and hardcoded test credentials in tests
+"tests/*" = ["T20", "S101", "S106"]
