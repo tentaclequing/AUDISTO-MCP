@@ -1,0 +1,7 @@
+# AUDISTO-MCP Dependencies
+# Python 3.8+ required
+# Install with: pip install -r requirements.txt
+
+fastmcp==0.1.0
+requests==2.31.0
+pydantic==1.10.12

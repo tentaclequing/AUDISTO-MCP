@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "audisto": {
+      "command": "python C:\\Users\\gianna.brachetti\\Documents\\GitHub\\AUDISTO-MCP\\server.py",
+      "args": []
+    }
+  }
+}

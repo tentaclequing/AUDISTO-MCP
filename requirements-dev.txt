@@ -1,0 +1,4 @@
+# Development requirements
+pytest==7.4.0
+responses==0.25.8
+pip-audit==2.6.0

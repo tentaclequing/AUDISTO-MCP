@@ -1,0 +1,26 @@
+{
+  "version": "2.0",
+  "base_url": "https://api.audisto.com/2.0",
+  "endpoints": {
+    "crawls_list": {
+      "path": "/status/crawls",
+      "method": "GET",
+      "params": ["deep", "fields", "filter", "chunk", "chunksize", "output"]
+    },
+    "crawl_detail": {
+      "path": "/crawls/{id}",
+      "method": "GET",
+      "params": ["deep", "fields", "output"]
+    },
+    "pages_chunked": {
+      "path": "/crawls/{id_crawl}/pages/",
+      "method": "GET",
+      "params": ["chunk", "chunksize", "deep", "fields"]
+    },
+    "cached_rendering_console": {
+      "path": "/crawls/{id_crawl}/pages/{id_page}/cached/rendering/console",
+      "method": "GET"
+    }
+  },
+  "notes": "Use `fields` and `deep` to reduce payloads. Respect chunking (default 100, max 10000). Use HTTPS and Basic Auth. Timeout: 120s."
+}

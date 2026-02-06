@@ -158,3 +158,25 @@ cython_debug/
 #  and can be added to the global gitignore or merged into this file.  For a more nuclear
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
+
+# Local env files and virtual environments
+.env
+.env.*
+.venv/
+venv/
+venv.bak/
+
+# IDE/editor config
+.vscode/
+*.sublime-workspace
+
+# Build artifacts
+dist/
+build/
+
+# Test artifacts
+.pytest_cache/
+
+# Local copilot instructions (AI agent notes, not for publication)
+.github/copilot-instructions.md
+

@@ -1,0 +1,25 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      - name: Install runtime deps
+        run: pip install -r requirements.txt
+      - name: Install dev deps
+        run: pip install -r requirements-dev.txt
+      - name: Run pip-audit
+        run: pip-audit --progress=off
+      - name: Run tests
+        run: pytest -q
