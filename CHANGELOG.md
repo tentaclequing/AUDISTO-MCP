@@ -2,6 +2,21 @@
 
 All notable changes to AUDISTO-MCP are documented in this file.
 
+## [1.1.1] - 2026-02-06
+
+### Fixed
+- **Pydantic dependency conflict**: Updated `pydantic==1.10.12` to `pydantic>=2.0.0` to resolve compatibility issue with `fastmcp>=0.1.0` (which requires `pydantic>=2.5.3`)
+- **Installation issues**: Loosened version constraints to allow pip to use pre-built wheels instead of requiring Rust compilation
+
+### Added
+- **OS-specific installation instructions**: Detailed setup guides for Windows (PowerShell), macOS, and Linux (Bash/Zsh)
+- **Claude CLI support**: Full integration instructions for using AUDISTO-MCP with Claude CLI (in addition to Claude Desktop and Gemini CLI)
+- **Reorganized documentation**: New "Supported AI Clients" section in README consolidating all client setup instructions
+
+### Documentation
+- **README.md**: Added platform-specific virtual environment activation, credential loading, and server startup commands
+- **README.md**: Added Claude CLI prerequisites and setup workflow for all operating systems
+
 ## [1.1.0] - 2026-02-06
 
 ### Added
