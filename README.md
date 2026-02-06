@@ -312,7 +312,7 @@ Follow these before publishing or sharing the repository:
 - **Limited exposure**: Prefer launching the MCP server via stdio (CLI integrations) instead of binding network sockets; if network binding is required, restrict to localhost and/or use firewall rules.
 - **Logs**: Avoid logging sensitive data (API keys, full request/response bodies). Keep logs for diagnostics only.
 
-If you'd like, I can add a small GitHub Actions workflow to run `pip-audit` automatically on PRs.
+This repository includes a GitHub Actions CI workflow that automatically runs `pip-audit`, code linting (ruff), type checking (mypy), and tests on all pushes and pull requests.
 
 ## License
 MIT - see [LICENSE](LICENSE)
